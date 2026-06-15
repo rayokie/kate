@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transmissions</title>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="live-bg-container">
+        <div class="glow-blob purple-blob"></div>
+        <div class="glow-blob blue-blob"></div>
+        <div class="glow-blob gold-blob"></div>
+    </div>
+
+    <div id="splashScreen" class="splash-screen">
+        <div class="splash-logo">
+            <div class="logo-ring outer-ring"></div>
+            <div class="logo-ring inner-ring"></div>
+            <div class="logo-core"></div>
+        </div>
+    </div>
+
+    <div id="customModal" class="fullscreen-overlay hidden" style="z-index: 4000;">
+        <div class="glass-card modal-box">
+            <h3 id="modalTitle" class="modal-title">Title</h3>
+            <p id="modalMessage" class="modal-message">Message</p>
+            <input type="text" id="modalInput" class="glass-input" style="display: none;">
+            <div class="modal-actions">
+                <button class="glass-btn" onclick="closeModalAction(false)">Cancel</button>
+                <button class="glass-btn gold-btn" id="modalConfirmBtn" onclick="closeModalAction(true)">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="loginScreen" class="fullscreen-overlay">
+        <div class="glass-card login-box">
+            <h2 class="login-title">WELCOME</h2>
+            <p class="login-subtitle">Please log in to continue.</p>
+            <input type="text" id="username" class="glass-input" placeholder="Username">
+            <div class="password-container">
+                <input type="password" id="password" class="glass-input" placeholder="Passcode">
+                <i class="ph-fill ph-eye password-toggle" onclick="togglePassword()"></i>
+            </div>
+            <button class="glass-btn" onclick="attemptLogin()">Connect</button>
+            <p id="loginError" class="error-text"></p>
+        </div>
+    </div>
+
+    <div id="uploadModal" class="fullscreen-overlay hidden">
+        <div class="story-header" style="width: 100%; position: absolute; top: 0;">
+            <span class="story-title">New Transmission</span>
+            <button class="story-close" onclick="closeUpload()"><i class="ph ph-x"></i></button>
+        </div>
+        <div class="glass-card upload-box">
+            <select id="uploadCategory" class="glass-input select-input">
+                <option value="messages">Text Message</option>
+                <option value="photos">Photo Feed</option>
+                <option value="videos">Video Feed</option>
+                <option value="audio">Audio Feed</option>
+                <option value="story">Highlight (Story)</option>
+            </select>
+            <textarea id="uploadCaption" class="glass-input textarea-input" placeholder="Write your message..." rows="4"></textarea>
+            
+            <div class="file-upload-wrapper">
+                <i class="ph ph-upload-simple"></i>
+                <span>Select File (Optional)</span>
+                <input type="file" id="uploadFile" class="file-input">
+            </div>
+
+            <button class="glass-btn gold-btn" onclick="submitMockUpload()">Transmit Data</button>
+        </div>
+    </div>
+
+    <div id="storyViewer" class="story-viewer hidden">
+        <div class="story-progress-container"></div>
+        <div class="story-header">
+            <span class="story-title">Highlights</span>
+            <button class="story-close" onclick="closeStory()"><i class="ph ph-x"></i></button>
+        </div>
+        <div class="story-content" id="storyMediaContainer"></div>
+        <div class="story-caption" id="storyCaption"></div>
+        <div class="story-tap-zones">
+            <div class="tap-left" onclick="prevStory()"></div>
+            <div class="tap-right" onclick="nextStory()"></div>
+        </div>
+    </div>
+
+    <div id="appInterface" style="display: none;">
+        
+        <header class="top-dashboard">
+            <div class="dashboard-left" onclick="openStory(0)">
+                <div class="story-ring">
+                    <div class="story-avatar" style="background-color: var(--glass-bg);"></div>
+                </div>
+                <span class="story-label">Highlights</span>
+            </div>
+            
+            <div class="dashboard-right">
+                <div class="note-toggle" onclick="toggleNoteView()">
+                    <div class="note-avatar" id="otherNoteAvatar">
+                        <div class="green-dot" id="noteUpdateDot"></div>
+                    </div>
+                </div>
+                <div class="quick-note-bubble" onclick="editQuickNote()">
+                    <i class="ph-fill ph-quotes"></i>
+                    <span id="quickNoteText" class="empty-note">Tap to add note</span>
+                </div>
+                
+                <div class="app-controls">
+                    <button class="control-btn" onclick="refreshFeed(this)"><i class="ph-bold ph-arrows-clockwise"></i></button>
+                    <button class="control-btn" onclick="logoutApp()"><i class="ph-bold ph-sign-out"></i></button>
+                </div>
+            </div>
+        </header>
+
+        <main class="feed">
+            <div id="skeletonFeed">
+                <div class="glass-card skeleton-card">
+                    <div class="skeleton-block skeleton-header"></div>
+                    <div class="skeleton-block skeleton-text"></div>
+                    <div class="skeleton-block skeleton-text short"></div>
+                </div>
+                <div class="glass-card skeleton-card">
+                    <div class="skeleton-block skeleton-header"></div>
+                    <div class="skeleton-block skeleton-media"></div>
+                </div>
+            </div>
+
+            <div id="postFeed" style="display: none;"></div>
+        </main>
+
+        <nav class="glass-dock-container">
+            <div class="glass-dock">
+                <button class="dock-item active" onclick="filterPosts('all', event)" title="All Feed">
+                    <i class="ph ph-squares-four"></i>
+                </button>
+                <button class="dock-item" onclick="filterPosts('photos', event)" title="Photos">
+                    <i class="ph ph-image"></i>
+                </button>
+                
+                <button id="adminUploadBtn" class="dock-item upload-btn-dock admin-only" style="display: none;" onclick="openUpload()" title="Upload">
+                    <i class="ph ph-plus-circle"></i>
+                </button>
+
+                <button class="dock-item" onclick="filterPosts('videos', event)" title="Videos">
+                    <i class="ph ph-video-camera"></i>
+                </button>
+                <button class="dock-item" onclick="filterPosts('audio', event)" title="Audio">
+                    <i class="ph ph-headphones"></i>
+                </button>
+            </div>
+        </nav>
+    </div>
+
+    <script type="module" src="app.js"></script>
+</body>
+</html>
+
